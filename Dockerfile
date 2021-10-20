@@ -25,6 +25,7 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 # Cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
+RUN go env -w GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
 # Copy the go source code
@@ -37,7 +38,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o /usr/bin
 FROM ${SPARK_IMAGE}
 USER root
 COPY --from=builder /usr/bin/spark-operator /usr/bin/
-RUN apt-get update \
+RUN apt-get --allow-releaseinfo-change update \
     && apt-get install -y openssl curl tini \
     && rm -rf /var/lib/apt/lists/*
 COPY hack/gencerts.sh /usr/bin/
